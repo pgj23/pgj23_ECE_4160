@@ -63,10 +63,10 @@ However, when I held the Artemis up and whistled into it, the loudest recorded f
 ### Prelab
 The first part of the prelab was to set up a virtual environment so that we use jupyter notebook to write the commands to send to the Artemis
 
-#### Python Installation
+### Python Installation
 I already had a python installation on my machine, so I simply verified I was on the most recent version.
 
-#### Virtual Environment
+### Virtual Environment
 Following the instructions in the prelab, I created a new virtual environment by running the commands 
 ```
 python3 -m pip install --user virtualenv
@@ -85,10 +85,85 @@ Once the virtual environment was activated, I then installed the required python
 pip install numpy pyyaml colorama nest_asyncio bleak jupyterlab
 ```
 
-#### Codebase
+### Codebase
 The codebase was downloaded from [here](https://fastrobotscornell.github.io/FastRobots-2025/labs/ble_robot_1.2.zip), and extracted into the same folder as the virtual environment.
 
 I then started jupyter lab by running 
 ```
 jupyter lab
 ```
+
+### Configuration
+
+To connect my computer to the Artemis board over bluetooth, I needed to know the artemis board's MAC address, I did this by burning the ``ble_arduino.ino`` program from the codebase onto the board. This would print the board's MAC address over serial.
+
+#### MAC Address and UUID:
+![MAC Address](MAC.jpg)
+For some reason, the serial monitor did not register until I added an extra ``serial.print()`` statement right under ``serial.begin()``, which is why there is a "hi" printed above the MAC address.
+
+I also generated a Unique Universal Identifier (UUID) in a terminal window to ensure I would only connect to my board and not another student's.
+
+Once I had these two addresses, added them in the correct spots in both the jupyter lab file ``connections.yaml``, and the BLE_UUIDs section in ``ble_arduino.ino``
+
+##### Connections.yaml:
+```
+artemis_address: 'c0:81:1c:26:21:64'
+
+ble_service: 'fc457481-eb77-45bf-8ae5-ebad49aa0dce'
+
+characteristics:
+  TX_CMD_STRING: '9750f60b-9c9c-4158-b620-02ec9521cd99'
+
+  RX_FLOAT: '27616294-3063-4ecc-b60b-3470ddef2938'
+  RX_STRING: 'f235a225-6735-4d73-94cb-ee5dfce9ba83'
+```
+
+##### BLE_UUIDs:
+```
+//////////// BLE UUIDs ////////////
+#define BLE_UUID_TEST_SERVICE "fc457481-eb77-45bf-8ae5-ebad49aa0dce"
+
+#define BLE_UUID_RX_STRING "9750f60b-9c9c-4158-b620-02ec9521cd99"
+
+#define BLE_UUID_TX_FLOAT "27616294-3063-4ecc-b60b-3470ddef2938"
+#define BLE_UUID_TX_STRING "f235a225-6735-4d73-94cb-ee5dfce9ba83"
+//////////// BLE UUIDs ////////////
+```
+### Tasks
+
+#### ECHO
+
+The funtion ``ECHO`` is designed to allow the Artemis board to receive a string sent from the computer over bluetooth and send back a string over bluetooth. It is important for the board to be both able to send and recieve data. 
+
+The function on the arduino side was written by modifying the given ``PING`` function to send the recived data back instead of just the message "pong".
+```
+case ECHO:
+
+            char char_arr[MAX_MSG_SIZE];
+
+            // Extract the next value from the command string as a character array
+            success = robot_cmd.get_next_value(char_arr);
+            if (!success)
+                return;
+
+            /*
+             * Your code goes here.
+             */
+            Serial.print("Robot says -> ");
+            Serial.print(char_arr);
+            Serial.println(" :)");
+            
+            tx_estring_value.clear();
+            tx_estring_value.append("Robot says -> ");
+            tx_estring_value.append(char_arr);
+            tx_estring_value.append(" :)");
+            tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+            Serial.print("Sent back: ");
+            Serial.println(tx_estring_value.c_str());
+
+            break;
+```
+
+On the jupyter lab side, sending the command and receiving the reply looks like this:
+![ECHO](echo.png)
