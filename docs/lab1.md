@@ -4,13 +4,13 @@
 
 This lab was divided into 2 parts over to course of two weeks to help us familiarize ourselves with the use of the Arduino IDE and Artemis board before learning how to work with the Artemis board over a bluetooth connection with a computer. 
 
-## Lab 1A
+## LAB 1A
 
-# Prelab
+### Prelab
 
 The Prelab for the first part of the lab was simply to download and install the most recent version of the [Arduino IDE](https://www.arduino.cc/en/software), and then to install the apollo3 libary from sparkfun by adding it to the libary manager using the json link found [here].
 
-# Lab
+### Lab
 
 The bulk of Lab 1A was testing our ability to use the Arduino IDE to flash code to our Artemis board and run it. There were 4 example programs that were run to verify the functionality of  specific parts of the board. These example programs would also be used in the future as a reference for what functions can be used to read data from and control various sensors.
 
@@ -57,3 +57,38 @@ However, when I held the Artemis up and whistled into it, the loudest recorded f
 #### Whistling Frequency:
 ![Whistling Freq](temp_1.jpg)
 
+
+## LAB 1B
+
+### Prelab
+The first part of the prelab was to set up a virtual environment so that we use jupyter notebook to write the commands to send to the Artemis
+
+#### Python Installation
+I already had a python installation on my machine, so I simply verified I was on the most recent version.
+
+#### Virtual Environment
+Following the instructions in the prelab, I created a new virtual environment by running the commands 
+```
+python3 -m pip install --user virtualenv
+```
+```
+python3 -m venv FastRobots_ble
+```
+in a terminal.
+
+I could then activate the virtual environment by running the command
+```
+source FastRobots_ble/bin/activate
+```
+Once the virtual environment was activated, I then installed the required python packages by running the command 
+```
+pip install numpy pyyaml colorama nest_asyncio bleak jupyterlab
+```
+
+#### Codebase
+The codebase was downloaded from [here](https://fastrobotscornell.github.io/FastRobots-2025/labs/ble_robot_1.2.zip), and extracted into the same folder as the virtual environment.
+
+I then started jupyter lab by running 
+```
+jupyter lab
+```
