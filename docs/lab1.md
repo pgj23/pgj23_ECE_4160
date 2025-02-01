@@ -18,4 +18,4 @@ The bulk of Lab 1A was testing our ability to use the Arduino IDE to flash code 
 
 As is always the case when testing a new microcontroller board, the first test run was to blink a single LED. The "Blinky" example code was taken from the built-in-examples section of the Arduino IDE
 
-<video src="IMG_5745.mov" width="320" height="240" controls></video>
+![Blinking LED](blinky.jpg)
