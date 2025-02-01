@@ -12,10 +12,48 @@ The Prelab for the first part of the lab was simply to download and install the 
 
 # Lab
 
-The bulk of Lab 1A was testing our ability to use the Arduino IDE to flash code to our Artemis board and run it. There were 4 example programs that were run to verify the functionality of  specific parts of the board.
+The bulk of Lab 1A was testing our ability to use the Arduino IDE to flash code to our Artemis board and run it. There were 4 example programs that were run to verify the functionality of  specific parts of the board. These example programs would also be used in the future as a reference for what functions can be used to read data from and control various sensors.
 
 ### 1. Blinky
 
 As is always the case when testing a new microcontroller board, the first test run was to blink a single LED. The "Blinky" example code was taken from the built-in-examples section of the Arduino IDE
 
 ![Blinking LED](blinky.jpg)
+
+
+### 2. Serial Monitor
+
+To test the functionality of the serial communication capabilities, I used the Example4_Serial code found in the Apollo3 library's example section. This demo simply had the Artemis board recieve a serial commuications message in the form of a string, and then send back that same string in a second serial commication, causing a sort of echo.
+
+In this example, the computer sends the message "hello world", through the serial monitor, and the message "hello world" is repeated back.
+
+#### Computer sends serial message:
+![Computer Sends Hello world](hello_world_1.jpg)
+
+#### Artemis recieves and replys via serial message:
+![Artemis echos Hello world](hello_world_2.jpg)
+
+### 3. Temperature Sensor
+
+To test the temperature sensor, I used the Example2_analogread code found in the Apollo3 library's examples. This demo would read the data from the temperature sensor and send it to the computer over serial communication. 
+
+To verify the temperature sensor was working, I looked at the background temperature readings and then held my finger over the board for a few seconds to warm it up.
+#### Background Temperature:
+![Background Temp](temp_1.jpg)
+
+#### Hand Temperature:
+![Warmed Temp](temp_2.jpg)
+Over the course of about 4 seconds, the temperature went from 32924 units to 33088 units, proving my hand did warm up the sensor.
+
+### 4. Microphone
+To test the microphone, I used the Example1_microphone code found in the PDM library's examples. This demo would read the frequency data from the microphone and send it to the computer over serial communication. 
+
+Initially, when no overt sounds were being made, the microphone read the background frequency of the room to be between 50-60 hz. 
+
+#### Background Frequency:
+![Background Freq](sound_1.jpg)
+
+However, when I held the Artemis up and whistled into it, the loudest recorded frequency changed to around 1670 hz, confirming the microphone works.
+#### Whistling Frequency:
+![Whistling Freq](temp_1.jpg)
+
