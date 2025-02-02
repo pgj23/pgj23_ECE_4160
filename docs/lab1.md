@@ -51,11 +51,11 @@ To test the microphone, I used the Example1_microphone code found in the PDM lib
 Initially, when no overt sounds were being made, the microphone read the background frequency of the room to be between 50-60 hz. 
 
 #### Background Frequency:
-![Background Freq](sound_1.jpg)
+![Background Freq](sound_1.png)
 
 However, when I held the Artemis up and whistled into it, the loudest recorded frequency changed to around 1670 hz, confirming the microphone works.
 #### Whistling Frequency:
-![Whistling Freq](temp_1.jpg)
+![Whistling Freq](sound_2.png)
 
 
 ## LAB 1B
@@ -166,4 +166,218 @@ case ECHO:
 ```
 
 On the jupyter lab side, sending the command and receiving the reply looks like this:
-![ECHO](echo.png)
+![ECHO](ECHO.png)
+
+#### SEND_THREE_FLOATS
+
+This funtion is a modification of the given command ``SEND_TWO_INTS``, and was accomplished by simply adding an extra sent and recieve value, and changing the value's type to ``float``. 
+
+On the jupyter lab side it looks like this:
+![SEND_THREE_FLOATS_2](SEND_THREE_FLOATS_1.png)
+
+And on the arduino side it looks like this:
+![SEND_THREE_FLOATS_2](SEND_THREE_FLOATS_2.png)
+
+#### GET_TIME_MILLIS
+
+Another important function for the board is to be able to send timestamps along side data. The ``GET_TIME_MILLIS`` function uses function ``millis()`` to access the onboard timer and send the current timestamp in a string, using similar code to the ``ECHO`` command.
+
+On the arduino side:
+```
+case GET_TIME_MILLIS:
+          float time_millis;
+          time_millis = (float) millis();
+
+          Serial.print("T:");
+          Serial.println(time_millis);
+
+          tx_estring_value.clear();
+          tx_estring_value.append("T:");
+          tx_estring_value.append(time_millis);
+          tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+          break;
+
+          case TIME_DATA_LOOP:
+            {
+            int count = 0;
+            unsigned long startT = millis();
+            while (millis() - startT < 5000) {
+                
+                tx_estring_value.clear();
+                tx_estring_value.append("Sample ");
+                tx_estring_value.append(count);
+                tx_estring_value.append(": ");
+                tx_estring_value.append((float) millis());
+                tx_characteristic_string.writeValue(tx_estring_value.c_str());
+                count++;
+
+            }
+
+            Serial.println("Sent time many times");
+
+            break;
+```
+
+In jupyter lab:
+![GET_TIME_MILLIS](GET_TIME_MILLIS.png)
+
+#### Notification Handler
+
+The nofification handler is a function that is designed to work with the ``ble.start_notify`` function. The ``ble.start_notify`` function will call the notification handler every time a string message is recieved from the Artemis over bluetooth. At this stage of the lab, I created a very simple notification handler which would simply print out the string recived. Using the notification handler alongside ``ble.start_notify`` removes the need to call the ``ble.receive_string`` command in jupyter notebook every time we want to recieve a string. 
+
+The notification handler for this stage of the lab is this:
+```
+def notif_handler(uuid, bytes):
+    a = ble.bytearray_to_string(bytes)
+    print(f'current time is: {a}')
+    
+```
+
+For reasons unkown to science, the notification handler only printed the messages under this cell:
+![notif_handler](notif_handler.png)
+
+#### Looped GET_TIME_MILLIS
+
+In order to get a baseline for how fast the Artemis board can send data, I created a loop to repeatedly run the code for ``GET_TIME_MILLIS`` for a period of around 5 seconds. 
+
+Artemis Board:
+```
+case TIME_DATA_LOOP:
+            {
+            int count = 0;
+            unsigned long startT = millis();
+            while (millis() - startT < 5000) {
+                
+                tx_estring_value.clear();
+                tx_estring_value.append("Sample ");
+                tx_estring_value.append(count);
+                tx_estring_value.append(": ");
+                tx_estring_value.append((float) millis());
+                tx_characteristic_string.writeValue(tx_estring_value.c_str());
+                count++;
+
+            }
+
+            Serial.println("Sent Data");
+
+            break;
+            }
+```
+
+Jupyter lab:
+```
+ble.send_command(CMD.TIME_DATA_LOOP, "")
+```
+This function managed to send 275 samples over a period of 4.971 seconds, meaning it had a data rate of around 55 messages a second
+
+![TIME_DATA_LOOP](TIME_DATA_LOOP.png)
+
+#### SEND_TIME_DATA
+
+The function ``SEND_TIME_DATA`` first stores a list of timestamps in an array of length 256, and then loops through the array and sends all the entries as fast as it can. This is a different method used than in ``TIME_DATA_LOOP``, since the data is not being sent in "real_time", but is instead being collected and then sent in seperate loops. The fact that a message does not have to be sent between each timestamp should significantly improve the frequency of the timestamps, and the fact that the messages don't have to wait for a timestamp in between them should increase the frequency of the messages.
+
+
+Artemis Board:
+```
+case SEND_TIME_DATA:
+          {
+          int i = 0;
+          unsigned long startT = millis();
+
+          while (i < data_array_size) {
+              
+              time_data[i] = (int) millis();
+              i++;
+
+              if(i == data_array_size-1)
+              Serial.println("OoM");
+              
+          }
+          for (int j = 0; j < data_array_size; j++) {
+
+              if(time_data[j] == 0)
+              break;
+
+              tx_estring_value.clear();
+              tx_estring_value.append("Sample ");
+              tx_estring_value.append(j);
+              tx_estring_value.append(": ");
+              tx_estring_value.append(time_data[j]);
+              tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+          }
+
+          Serial.println("Sent data");
+
+          break;
+          }
+```
+
+The ``time_data`` array was created as a global variable at the top of the file:
+```
+const int data_array_size = 256;
+int time_data[data_array_size];
+```
+Jupyter Lab:
+```
+ble.send_command(CMD.SEND_TIME_DATA, "")
+```
+![SEND_TIME_DATA](SEND_TIME_DATA.png)
+
+This function was able to send 256 timestamps that ranged from 176717ms to 176683ms. The means it has the ability to store timestamp data at almost 7530 messages per second, as long as it sends that data asynchronously. 
+
+#### GET_TEMP_READINGS
+
+This function is almost identical to ``SEND_TIME_DATA``, with the only difference being that an array of temperature values is also being recorded and sent alongside the timestamps.
+
+Artemis Board:
+```
+case GET_TEMP_READINGS:
+          {
+          int i = 0;
+          unsigned long startT = millis();
+
+          //Build the Array
+          while ( i < data_array_size) {
+              
+              time_data[i] = (int) millis();
+              temp_data[i] = getTempDegF();
+              i++;
+
+              if(i == data_array_size-1)
+              Serial.println("OoM");
+              
+          }
+          for (int j = 0; j < data_array_size; j++) {
+
+              if(time_data[j] == 0)
+              break;
+
+              tx_estring_value.clear();
+              tx_estring_value.append("Sample ");
+              tx_estring_value.append(j);
+              tx_estring_value.append(": Temp is ");
+              tx_estring_value.append(temp_data[j]);
+              tx_estring_value.append(" at time ");
+              tx_estring_value.append(time_data[j]);
+              tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+          }
+
+          Serial.println("Sent time many times");
+
+          break;
+          }
+```
+The ``temp_data`` array was created as a global variable at the top of the file:
+```
+int temp_data[data_array_size];
+```
+Jupyter Lab
+```
+ble.send_command(CMD.GET_TEMP_READINGS, "")
+```
+![GET_TEMP_DATA](GET_TEMP_READINGS.png)
+
+This was able to store 256 samples over the course 213 ms, giving a store rate of 1201 messages per second.
