@@ -197,26 +197,6 @@ case GET_TIME_MILLIS:
           tx_characteristic_string.writeValue(tx_estring_value.c_str());
 
           break;
-
-          case TIME_DATA_LOOP:
-            {
-            int count = 0;
-            unsigned long startT = millis();
-            while (millis() - startT < 5000) {
-                
-                tx_estring_value.clear();
-                tx_estring_value.append("Sample ");
-                tx_estring_value.append(count);
-                tx_estring_value.append(": ");
-                tx_estring_value.append((float) millis());
-                tx_characteristic_string.writeValue(tx_estring_value.c_str());
-                count++;
-
-            }
-
-            Serial.println("Sent time many times");
-
-            break;
 ```
 
 In jupyter lab:
@@ -381,3 +361,12 @@ ble.send_command(CMD.GET_TEMP_READINGS, "")
 ![GET_TEMP_DATA](GET_TEMP_READINGS.png)
 
 This was able to store 256 samples over the course 213 ms, giving a store rate of 1201 messages per second.
+
+#### Advantages and Disadvantages 
+
+The method of sending data used by ``TIME_DATA_LOOP`` sends data much slower and has a much larger gap between timesteps, which means it cannot send high-resolution data. However, it has the advantage that every data sample sent is the most recent sample, which means this is the method of choice when data needs to be sent "live" and the quality of the data matters less.
+
+The second method has a much higher resolution, which both ``SEND_TIME_DATA`` and ``GET_TEMP_READINGS`` being able to collect over a thousand samples a second, compared to the 50 samples per second resolution of ``TIME_DATA_LOOP``. However, this method has two prominent disadvantages. The first is that this data needs to be collected and sent in two separate steps, which means this cannot be used for sending data in anywhere close to "real time". The second disadvantage is that this requires the storage of the data in arrays in memory, of which there is a limited amount. In the functions created for this lab, we used one array of ints (1 byte each) for the timestamps, and one array of doubles (8 bytes each) for the temperature data. Given that the Artemis board only has 384kB of memory, this method could only store 32768 entries of temp data with associated timestamps. 
+
+#### Discussion
+This lab introduced us to the Artemis board and how to send commands to it over bluetooth, which will be vital in commanding the robot. This lab also introduced us to the Arduino IDE and jupyter lab which will be the two main tools used for programing the robot.
