@@ -134,4 +134,9 @@ ble.start_notify(ble.uuid['RX_STRING'], notif_handler)
 ```
 ## Stunt!
 This lab we also recieved the car that will act as the differential drive for our robot. Driving it around gave me a feel for how the car feels, and how easy it is to flip over and/or crash (very easy).
+
+
 [![Stunt Video](http://img.youtube.com/vi/6xkjqmd1Nfg/0.jpg)](http://www.youtube.com/watch?v=6xkjqmd1Nfg)
+
+#### Postscript
+This was the week I had the flu and I think the gyro measurements I have right now are bad enough to suspect either I did something wrong or the gyro did but I ran out of time to go to office hours and check.
