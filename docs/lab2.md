@@ -58,3 +58,80 @@ However, the best example of the low-pass filter improving this can be seen when
 The gyroscope measures the angular change in degrees per second of the IMU in the X, Y and Z axis. By integrating this change over time, we can calculate the pitch, roll, AND yaw of the IMU. 
 ![Gyro Code](lab_2_figs/integrate_gyro.png)
 
+Although the data from the gyroscope was much less noisy than the data derived from the accelerometer, as shown by the FFTs, the gyro had its own problems.
+
+Since the data from the gyroscope had to be integrated, any small errors would be accumlulated over time and cause the calculated pitch, roll, and yaw to drift over time.
+
+Setting the IMU flat on the table with no external movements or large vibrations, shows that the drift from these errors could get extremely large.
+![Gyro Pitch](lab_2_figs/gyro_pitch.png)
+![Gyro Pitch](lab_2_figs/gyro_fft.png)
+![Gyro Roll](lab_2_figs/gyro_roll.png)
+![Gyro Roll](lab_2_figs/gyro_roll_fft.png)
+![Gyro Yaw](lab_2_figs/gyro_yaw.png)
+![Gyro Yaw](lab_2_figs/gyro_yaw_fft.png)
+
+Due to what I assume are manufaturing imperfections, the calculated Roll data always had the drift, drifting up to 14 degrees over a period of around 8 seconds. 
+
+#### Complementary filter
+To solve this problem, I implemented a complementary filter, which fused the measurements of the accelerometer and the gyroscope. 
+
+![Comp Filter Code](lab_2_figs/comp_filt_code.png)
+
+I deicided to heavily weight the filter towards the accelerometer because the drift on the gyros was so bad, and the low pass filter had seemed to fix most of the issues.
+
+A comparison of all 4 methods of measuring pitch and roll was made, running all 4 methods at the same time, therefore measuing the same movement, which was semi-random rotations in all 3 axis.
+
+![Pitch Comparison](lab_2_figs/pitch_comparison.png)
+
+![Roll Comparison](lab_2_figs/roll_comparison.png)
+
+As can be seen, the drift on the gyro completely dominated any measurements and brought the roll outside of the expected rand of (-180,180).
+
+As for Yaw, since the accelerometer cannot measure yaw, the only available measurements are from the gyro.
+![Yaw Data](lab_2_figs/yaw_data_2.png)
+
+## Sampling Data
+
+My final data was captured using the bluetooth command ``GET_IMU_READINGS``, which gathered the data in this loop:
+![GET_IMU_READINGS](lab_2_figs/get_imu_readings.png)
+
+At the end of this loop there is a delay for 1 milliseconds, as there is at the end of all data collection loops used in this lab. I initially ran these loops without this delay, but found that the loop would run faster than the IMU could gather data, and there would be duplicate data in the array sent, with inconistent time distances between new data, which made it impossible to do any sort of analysis on the frequency spectrum. I discovered that adding a delay statement at the end fixed this, even when the delay was shorter than the IMU could get data. Even with just a ``delay(1)``, the data now came in exactly every 8ms.
+![time_data](lab_2_figs/time_data.png)
+
+To be honest I don't really understant how adding a 1 ms delay could cause data to line up to every 8ms, but it was extremely consistent. 
+
+This sampling rate means that 1024 samples is 8.192 seconds of data. The comparision data shown in the previous section of this report is an example of this 8 second 
+
+All the data is recieved and stored into array for processing using this code in jupyter notebook:
+```
+pitch_comp = []
+roll_comp = []
+pitch_g = []
+roll_g = []
+yaw_g = []
+pitch_a = []
+roll_a = []
+pitch_a_lpf = []
+roll_a_lpf = []
+time_data = []
+def notif_handler(uuid, bytes):
+    s = ble.bytearray_to_string(bytes)
+    if("|" in s):
+        sep_notif = s.split("|")
+        pitch_comp.append(float(sep_notif[0]))
+        roll_comp.append(float(sep_notif[1]))
+        pitch_a.append(float(sep_notif[2]))
+        roll_a.append(float(sep_notif[3]))
+        pitch_a_lpf.append(float(sep_notif[4]))
+        roll_a_lpf.append(float(sep_notif[5]))
+        pitch_g.append(float(sep_notif[6]))
+        roll_g.append(float(sep_notif[7]))
+        yaw_g.append(float(sep_notif[8]))
+        time_data.append(float(sep_notif[9]))
+
+    
+ble.start_notify(ble.uuid['RX_STRING'], notif_handler)
+```
+## Stunt!
+This lab we also recieved the car that will act as the differential drive for our robot. Driving it around gave me a feel for how the car feels, and how easy it is to flip over and/or crash (very easy).
+[![Stunt Video](http://img.youtube.com/vi/6xkjqmd1Nfg/0.jpg)](http://www.youtube.com/watch?v=6xkjqmd1Nfg)
