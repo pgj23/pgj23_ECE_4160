@@ -4,6 +4,23 @@
 
 ## Prelab
 
+
+### I2C
+
+Reading the datasheet before lab informed that the ToF sensors communicate over I2C, and that the default address of the sensor is 0x52
+![Datasheet Address](lab_3_figs/IC2_addr_datasheet.png)
+
+### ToF Sensors
+
+The plan fo rthe robot is for it to use 2 ToF sensors so that the Artemis board can receive distance information from multiple directions. Because both ToF sensors have the same address, one of the addresses needs to be changed so that both can be operated simultaneously. This is done by wiring a shutdown pin on one ToF sensor to the Artemis board so that it can be turned off while the address of the opposing sensor is changed.
+
+### Placement of ToF sensors
+
+I plan to place my two ToF sensors on perpendicular sides of the car, so that the car can both see how far ahead walls are to avoid crashing, and so that it can see how close it is to a parallel wall, which should help it with localization.
+![ToF Sensors](lab_3_figs/ToF_placement.png)
+
+### Wiring Diagram
+![Wiring Diagram](lab_3_figs/wiring_diragram.png)
 ## Lab Tasks
 
 ### Artemis Board on battery Power
@@ -118,5 +135,106 @@ void loop(void)
 }
 ```
 
-By doing so, we can see that the sensors take 89 ms to get new data to the board, which is very slow and lets the board do a lot of computations in the meantime.
-![Address of ToF sensor](lab_3_figs/timing.png)
+By doing so, we can see that the limiting factor in how fast the sensor data can be printed is that the the sensors take 89 ms to get new data to the board, which is very slow and lets the board do a lot of computations in the meantime.
+![Timing](lab_3_figs/timing.png)
+
+### Sending timestamped data over bluetooth
+
+After I confirmed I could run a loop on the Artemis continuously while printing timestamped ToF data, I combined this code with the code from the end [Lab 2](lab2.md) to send a section of timestamped ToF and IMU data over bluetooth.
+
+```
+case GET_IMU_AND_TOF_READINGS:
+          {
+            int i = 0;
+            float pitch_g = 0, roll_g = 0, yaw_g = 0, dt =0, pitch_g_accum = 0, roll_g_accum = 0, yaw_g_accum = 0;
+            unsigned long last_time = millis();
+            const float alpha = 0.2;
+
+              //Build the Array
+              while ( i < data_array_size) {
+                if(myICM.dataReady() && distanceSensor0.checkForDataReady() && distanceSensor1.checkForDataReady())
+                {
+                  myICM.getAGMT();
+                  dt = (millis()-last_time)/1000.;
+                  last_time = millis();
+                  time_data[i] = last_time;
+                  pitch_g = myICM.gyrY()*dt;
+                  roll_g = myICM.gyrX()*dt;
+                  yaw_g = myICM.gyrZ()*dt;
+                  pitch_g_accum += pitch_g;
+                  roll_g_accum += roll_g;
+                  yaw_g_accum += yaw_g;
+                  pitch_g_data[i] = pitch_g_accum;
+                  roll_g_data[i] = roll_g_accum;
+                  yaw_g_data[i] = yaw_g_accum;
+                  pitch_a_data[i] = atan2(myICM.accY(),myICM.accZ())*180/M_PI; 
+                  roll_a_data[i]  = atan2(myICM.accX(),myICM.accZ())*180/M_PI;
+                  
+                  pitch_a_lpf[i] = alpha*pitch_a_data[i] + (1-alpha)*pitch_a_lpf[i-1];
+                  pitch_a_lpf[i-1] = pitch_a_lpf[i];
+                  roll_a_lpf[i] = alpha*roll_a_data[i] + (1-alpha)*roll_a_lpf[i-1];
+                  roll_a_lpf[i-1] = roll_a_lpf[i];
+
+                  pitch_comp_data[i] = (pitch_comp_data[i-1] + pitch_g)*(.2) + pitch_a_lpf[i]*.8;
+                  roll_comp_data[i] = (roll_comp_data[i-1] + roll_g)*(.2) + roll_a_lpf[i]*.8;
+
+                  distance_data0[i] = distanceSensor0.getDistance(); //Get the result of the measurement from the sensor
+                  distanceSensor0.clearInterrupt();
+
+                  distance_data1[i] = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
+                  distanceSensor1.clearInterrupt();
+                  
+
+                  i++;
+                  delay(1);
+                }
+                  
+              }
+
+              for (int j = 0; j < data_array_size; j++) {
+
+                if(time_data[j] == 0)
+                break;
+
+                tx_estring_value.clear();
+                // tx_estring_value.append("Sample ");
+                // tx_estring_value.append(j);
+                // tx_estring_value.append(": Pitch is ");
+                tx_estring_value.append(pitch_comp_data[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(roll_comp_data[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(pitch_a_data[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(roll_a_data[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(pitch_a_lpf[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(roll_a_lpf[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(pitch_g_data[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(roll_g_data[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(yaw_g_data[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(distance_data0[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(distance_data1[j]);
+                tx_estring_value.append("|");
+                tx_estring_value.append(time_data[j]);
+                tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+              }
+
+              Serial.println("Sent time many times");
+          break;
+          }
+```
+
+The data could then be graphed in jupyter lab:
+
+![Pitch](lab_3_figs/pitch.png)
+![Roll](lab_3_figs/roll.png)
+![Distances](lab_3_figs/distance_graphs.png)
+

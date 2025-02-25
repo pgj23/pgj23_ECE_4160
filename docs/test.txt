@@ -1,0 +1,70 @@
+//Build the Array
+              while (i < data_array_size || k < data_array_size) {
+                if(myICM.dataReady())
+                {
+                  myICM.getAGMT();
+                  dt = (millis()-last_time)/1000.;
+                  last_time = millis();
+                  time_data[i] = last_time;
+                  pitch_g = myICM.gyrY()*dt;
+                  roll_g = myICM.gyrX()*dt;
+                  yaw_g = myICM.gyrZ()*dt;
+                  pitch_g_accum += pitch_g;
+                  roll_g_accum += roll_g;
+                  yaw_g_accum += yaw_g;
+                  pitch_g_data[i] = pitch_g_accum;
+                  roll_g_data[i] = roll_g_accum;
+                  yaw_g_data[i] = yaw_g_accum;
+                  pitch_a_data[i] = atan2(myICM.accY(),myICM.accZ())*180/M_PI; 
+                  roll_a_data[i]  = atan2(myICM.accX(),myICM.accZ())*180/M_PI;
+                  
+                  pitch_a_lpf[i] = alpha*pitch_a_data[i] + (1-alpha)*pitch_a_lpf[i-1];
+                  pitch_a_lpf[i-1] = pitch_a_lpf[i];
+                  roll_a_lpf[i] = alpha*roll_a_data[i] + (1-alpha)*roll_a_lpf[i-1];
+                  roll_a_lpf[i-1] = roll_a_lpf[i];
+
+                  pitch_comp_data[i] = (pitch_comp_data[i-1] + pitch_g)*(.2) + pitch_a_lpf[i]*.8;
+                  roll_comp_data[i] = (roll_comp_data[i-1] + roll_g)*(.2) + roll_a_lpf[i]*.8;
+
+                  // distance_data0[i] = distanceSensor0.getDistance(); //Get the result of the measurement from the sensor
+                  // distanceSensor0.clearInterrupt();
+                  // distanceSensor0.stopRanging();
+
+                  // Serial.print("Distance0(mm): ");
+                  // Serial.print(distance0);
+
+                  // Serial.println();
+                  // int time = millis();
+                  // Serial.print("Time:");
+                  // Serial.println(time);
+                  // distanceSensor0.startRanging(); //Write configuration bytes to initiate measurement
+
+                  // distance_data1[i] = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
+                  // distanceSensor1.clearInterrupt();
+                  // distanceSensor1.stopRanging();
+
+                  // Serial.print("Distance0(mm): ");
+                  // Serial.print(distance0);
+
+                  // Serial.println();
+                  // int time = millis();
+                  // Serial.print("Time:");
+                  // Serial.println(time);
+                  // distanceSensor1.startRanging(); //Write configuration bytes to initiate measurement
+
+
+                  i++;
+                  delay(1);
+                }
+                if (distanceSensor0.checkForDataReady() && distanceSensor1.checkForDataReady())
+                {
+                  distance_data0[k] = distanceSensor0.getDistance(); //Get the result of the measurement from the sensor
+                  distanceSensor0.clearInterrupt();
+
+                  // distance_data1[k] = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
+                  // distanceSensor1.clearInterrupt();
+                  ToF_time = millis();
+                  time_data_ToF[k] = ToF_time;
+                  delay(1);
+                  k++;
+                }
