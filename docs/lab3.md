@@ -25,7 +25,7 @@ I plan to place my two ToF sensors on perpendicular sides of the car, so that th
 
 ### Artemis Board on battery Power
 
-The first Step of this lab was to solder one of our 650 mAh batteries to a JST connectro anc confirm that the artemis can be run on battery power
+The first Step of this lab was to solder one of our 650 mAh batteries to a JST connector and confirm that the artemis can be run on battery power
 ![Artemis Running on Battery Power](lab_3_figs/battery_power.jpg)
 
 Once the battery connections were soldered and I confirmed the artemis board was recieving power, I made sure that I could still connect to the board over bluetooth from my computer.
