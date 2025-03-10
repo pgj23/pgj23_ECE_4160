@@ -3,3 +3,4 @@
 * [LAB 2 - IMU](lab3.md)
 * [LAB 3 - ToF](lab3.md)
 * [LAB 4 - Motor Drivers](lab4.md)
+* [LAB 5 - Linear PID control](lab5.md)
