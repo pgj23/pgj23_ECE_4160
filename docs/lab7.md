@@ -367,7 +367,7 @@ Once this case was implemented, I re-tuned the robot so it could make the best u
 
 [![SUCCESS](lab_5_figs/success_vid.png)](https://youtu.be/-m6k3ABnfpQ)
 
-The new tuning is now full PID control. Recal how in lab 5 increasing the proportional gain too much above around 0.05, the robot crashed into the wall. The Kalman filter allowed me to increase my Proportional gain to 0.20, as long as I also increasd my Derivitive gain just to 100. I added an Integral gain of 0.0000063 to correct for the small steady state error I got.
+The new tuning is now full PID control. Recal how in lab 5 increasing the proportional gain too much above around 0.05 caused the robot crashed into the wall. The Kalman filter allowed me to increase my Proportional gain to 0.20, as long as I also increasd my Derivitive gain just to 100. I added an Integral gain of 0.0000063 to correct for the small steady state error I got.
 
 [![SUCCESS](lab_7_figs/success_vid.png)](https://youtu.be/bJeBDWF2wZM)
 
