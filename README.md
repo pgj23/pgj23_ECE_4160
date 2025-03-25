@@ -5,3 +5,4 @@
 * [LAB 4 - Motor Drivers](lab4.md)
 * [LAB 5 - Linear PID control](lab5.md)
 * [LAB 6 - Orientation Control](lab6.md)
+* [LAB 7 - Kalman Filter](lab7.md)
