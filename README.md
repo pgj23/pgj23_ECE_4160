@@ -6,3 +6,4 @@
 * [LAB 5 - Linear PID control](lab5.md)
 * [LAB 6 - Orientation Control](lab6.md)
 * [LAB 7 - Kalman Filter](lab7.md)
+* [LAB 8 - Stunt!](lab8.md)
