@@ -7,3 +7,5 @@
 * [LAB 6 - Orientation Control](lab6.md)
 * [LAB 7 - Kalman Filter](lab7.md)
 * [LAB 8 - Stunt!](lab8.md)
+* [LAB 9 - Mapping](lab9.md)
+* [LAB 10 - Bayes Filter Simulation](lab10.md)
