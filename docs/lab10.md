@@ -4,13 +4,13 @@
 
 In this lab, the a Bayes filter was used to localize a simulated robot.
 
-# Bayes filter
+## Bayes filter
 
 The Bayes filter is a tool for localizing a robot that takes in a prior belief about a robot's state, a control input and a measurement input. THe control input is used to predict the new state of the robot, which is then corrected by the measurement data, creating a new belief about the robot's state.
 
 ![Bayes](lab_10_figs/bayes_algo.png)
 
-# Compute control
+## Compute control
 
 This function approximates the control inputs needed to change the robot's pose (x position ,y position, and angle) from one pose to another. Since all robot movements can be modeled as a rototion to a new angle followed by a translation by some distance, followed by a second rotation to a new angle, this function returns those parameters as what can be used as the control input, u_t, in the bayes filter.
 
@@ -46,7 +46,7 @@ def compute_control(cur_pose, prev_pose):
     return delta_rot_1, delta_trans, delta_rot_2
 ```
 
-# Odometry motion model
+## Odometry motion model
 
 The first step of the Bayes filter is to predict where the robot is now based off of the control input and Odometry model. This function takes in a control input u, the previous pose, and the current pose, and calculates the probability of the current pose being the pose reached by that control input. It does this by calculating the actual control input needed to make the change in pose and then using a gaussian function to approximate the probability of the difference in control inputs.
 
@@ -84,7 +84,7 @@ def odom_motion_model(cur_pose, prev_pose, u):
 
 ```
 
-# Prediction Step
+## Prediction Step
 
 The prediction step uses the odometry model to update the probability that the robot is has a given state to take into account the control input. The function loops through every discretetized state x_{t-1} in the grid, and then updates the likelihood that every other possible state is now the true state, x_t, given the control input of this step. This is the most computationally intensive step of the bayes filter as every grid space needs to update every other grid space, making a finer grid extremely expensive in computation time.
 ```python
@@ -118,7 +118,7 @@ def prediction_step(cur_odom, prev_odom):
     loc.bel_bar = np.true_divide(temp, sum_val)
 ```
 
-# Sensor model
+## Sensor model
 
 The sensor model is used in the update step of the bayes filter. It takes in the most recent measurements (18 depth measurements the robot collects while spinning in a circle) of the robot and calculates the probability of the measurements being true given the current pose of the robot, using a gaussian funtion.
 
@@ -143,7 +143,7 @@ def sensor_model(obs):
     return prob_array
 ```
 
-# Update step
+## Update step
 
 The update step loops through all the possible states the robot could be in and updates their probability of being true given the probability of the measurement data being true given that state. The probabilities of each possible state are then normalized and this collection of probabilities is the new belief of the robot.
 
@@ -164,7 +164,7 @@ def update_step():
     loc.bel = loc.bel / np.sum(loc.bel)
 ```
 
-# Running the simulator
+## Running the simulator
 
 Once all the components of the Bayes filter were finished, I ran the simulator and plotted the dead reckoned odometry data, the true location of the robot, and the Bayes Filter's belief in the location of the robot.
 
