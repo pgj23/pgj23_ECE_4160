@@ -1,5 +1,7 @@
 * [Main](index.md)
 
+This lab was done in collaboration with Katarina Duric.
+
 # Lab 12: Path Planning and Execution
 
 The goal of this lab was to combine the skills learned in the previous labs to allow the robot to navigate a series of waypoints in a map autonomously.
@@ -25,13 +27,13 @@ There were 7 given waypoints that the robot was supposed to hit.
 
 Our main goal for this lab was to create an entirely closed loop solution. This meant that the robot would have to calculate the distances it would need to drive, and the angles it would need to tuen during the run, rather than having them hard-coded. A working solution could, in theory, be used to drive through a different set of waypoints on a different map only by changing the input map and waypoints.
 
-The solution consists of X steps, repeated for all waypoints.
+The solution consists of 5 steps, repeated for all waypoints.
 
 ### Step 1. Localize
 
 The first step the robot does is run the [Lab 11](lab11.md) bayes filter localization code. This allows the robot to have an estimate of where it is on the map, regardless of if previous steps have messed up.
 
-### Step 2. Calculate turn angle and Turn
+### Step 2. Calculate turn angle.
 
 Once the robot has an estimate for its current pose, the robot can then use the localized x and y coordiantes to calculate the angle between its estimated location and the next waypoint in the series. 
 
@@ -43,11 +45,11 @@ def calcTurnAngle(robotX, robotY, goalX, goalY):
     turnAngle = np.arctan2(vecY,vecX)
     return turnAngle
 ```
+### Step 3. Turn
+Once the angle the robot needs to turn to is calculated, the function `PID_TURN_ONCE` is called on the robot's Artemis board, which runs the PID orientation control function developed in [Lab 6](lab6.md), turning the robot to point at the waypoint it wants to drive towards.
 
-Once the angle the robot needs to turn to is calculated, the function `PID_TURN_ONCE` is called on the robot's Artemis board, which runs the PID orientation control function developed in [Lab ](lab6.md), turning the robot to point at the waypoint it wants to drive towards.
 
-
-### Step 3. Calculate distance from the wall the robot needs to stop at to arrive at the next waypoint. 
+### Step 4. Calculate distance from the wall the robot needs to stop at to arrive at the next waypoint.
 
 Now that the robot is pointing at the goal waypoint, we want it to drive towards it and stop once it is overtop of it. To do this, we first cast a ray out from the front of the robot and save the nearest point on that ray in which it intersects with on of the walls of the map. 
 
@@ -80,7 +82,7 @@ def depthPredict(robotX, robotY, robotTheta, robot_map):
     yEnd = robotY + maxRange * np.sin(robotTheta);
     cmdr.plot_odom(xEnd, yEnd) 
     # Initialize minimum depth to a large value
-    minDepth = maxRange;
+    minDepth = maxRange
     minX = 20
     minY = 20
 
@@ -137,4 +139,14 @@ def intersectPoint(x1, y1, x2, y2, x3, y3, x4, y4):
     return isect, x, y
 ```
 
-Because we know that the robot is pointing directly at the next waypoint, we know that the next waypoint lies on the line between the current robot pose
+Because we know that the robot is pointing directly at the next waypoint, we know that the next waypoint lies on the line between the current robot pose and the calculated point on the wall. This means that the distance between the goal waypoint and the point on the wall is the distance from the wall the robot needs to stop at to arrive at the goal waypoint.
+
+This is done in jupyter lab with the following python function:
+
+```python
+def calcStopDist(wallX, wallY, goalX, goalY):
+    stopDist = np.sqrt((wallX-goalX)**2 + (wallY - goalY)**2)
+    return stopDist*1000 #convert to mm
+```
+### Step 5.
+The stop distance is then sent to the robot, which exectues the linear PID control using kalman filtering developed in [Lab 7](lab7.md) to drive towards the wall until the desired distance is met.
