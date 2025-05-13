@@ -9,3 +9,5 @@
 * [LAB 8 - Stunt!](lab8.md)
 * [LAB 9 - Mapping](lab9.md)
 * [LAB 10 - Bayes Filter Simulation](lab10.md)
+* [LAB 11 - Bayes Filter](lab11.md)
+* [Lab 12: Path Planning and Execution](lab12.md)
