@@ -8,7 +8,7 @@ The goal of this lab was to combine the skills learned in the previous labs to a
 
 ## Setup
 
-There were 7 given waypoints that the robot was supposed to hit.
+There were 9 given waypoints that the robot was supposed to hit.
 ```python
 1. (-4, -3)    <--start
 2. (-2, -1)
@@ -150,3 +150,71 @@ def calcStopDist(wallX, wallY, goalX, goalY):
 ```
 ### Step 5.
 The stop distance is then sent to the robot, which exectues the linear PID control using kalman filtering developed in [Lab 7](lab7.md) to drive towards the wall until the desired distance is met.
+
+## Results
+
+Our robot was able to successfully navigate through the map, and at least approximately hit all 9 waypoints. 
+
+[![Successful Navigation](lab_12_figs/vid_1.png)](https://youtu.be/06bW_CJ1Ft4)
+
+<!-- We did not instruct the localize for 3 of the 9 points. The starting point was known, and so localization was not needed. Point number 4, (2, -3), lay on the line from point 3 to point 5, and so the robot would drive over it if it was successfully navigating anyway, making localization in that point an unessecary point of failure. Finally, it was not necessary to localize for the final point (0,0), as once the robot arrvived, the program could halt. -->
+
+### Waypoint 1: (-4,-3)
+Video Timestamps 0:00-0:28
+
+![(4,-3)](lab_12_figs/1st_point.png)
+
+Since the starting waypoint was always the same, for the first waypoint, we skipped the localization step. We started the robot facing the positive X direction of the map, which corresponds to a yaw angle of 0 degrees. The robot then turns 45 degrees to point at waypoint 2, and calculates the point on the wall it needs to drive towards, plotted in green. The robot then drives forward until it reaches the distance from this point that waypoint 2 lies at.
+
+### Waypoint 2: (-2, -1)
+Video Timestamps 0:28-1:28
+![(-2,-1)](lab_12_figs/2nd_point.png)
+![(-2,-1)](lab_12_figs/2nd_point_num.png)
+
+Here the robot did have to localize, in order to confirm it had reached -2,-1. The localized position of the robot is plotted in blue. In reality, the robot had overshot the waypoint slightly, but the localization was close enough not to cause any errors It then repeated the steps done for waypoint 1, and identified that waypoint 3 was directly to the right of it, and plotted the closest point on a wall to the right of the localized position in green.
+
+### Waypoint 3: (1, -1)
+###### Video Timestamps 1:28-2:35
+![(1,1)](lab_12_figs/3rd_point_2nd_try.png)
+![(1,1)](lab_12_figs/3rd_point_num.png)
+
+The localization for waypoint 3 localized slightly too far in the positive X direction, placing the robot directly above waypoint 4. This meant that the robot thought it had to drive straight down to reach waypoint 4, rather than at the slight angle from vertical it needed to do in reality.
+
+### Waypoint 4: (2, -3)
+###### Video Timestamps 2:35-3:25
+![(2, -3)](lab_12_figs/4th_point_2nd_try.png)
+![(2, -3)](lab_12_figs/4th_point_num.png)
+
+Due to the slightly incorrect localization for waypoint 3, the robot drove to a point about a foot to the left of the actual waypoint. The robot then localized, and ended up localizing too far to the right of waypoint 4, and slightly too far down. This is likely because the robot localized extremely close to a wall, and so the bayes filter update step had a lot distance measurements of a very close wall, which could have caused a different grid space, that was closer to the wall, become the most likely robot pose. 
+
+### Waypoint 5: (5, -3)
+###### Video Timestamps 3:35-4:26
+![(5, -3)](lab_12_figs/5th_point_2nd_try.png)
+![(5, -3)](lab_12_figs/5th_point_num.png)
+
+Even though the localization for waypoint 4 called for a greater angle than was nessecary, the robot still ended up on the correct tile that corresponded to (5,-3). Again, the bayes filter localized to a point near to, but not exactly, the robot's actual pose, in this case placing it further in the bottom right corner than the robot actually was. However, the localization was still close enough that the line between it and the next waypoint still points the robot in the correct direction to drive over waypoint 6 on its way to waypoint 7.
+
+
+### Waypoint 6: (5, -2)
+###### Video Timestamps 4:26-4:34
+Given that wapoint 6 lay on the line between waypoints 5 and 7, we elected to skip localization and planning for this step. As long as the robot was successfully navigating the surrounding points, it would always drive over this waypoint. Stopping here to localize would have only added an extra point of failure.
+
+### Waypoint 7: (5, 3)
+###### Video Timestamps 4:34-5:21
+![(5, 3)](lab_12_figs/6th_point.png)
+![(5, 3)](lab_12_figs/6th_point_num.png)
+
+The bayes filter localization for waypoint 7 continues the trend by localizing very close to, but slight to the right of, the actual robot position. However, in this case, the does not need to travel in the y direction, which the localization produced correctly, and so the incorrect angle error from waypoint 3's slightly off localization is not repeated.
+### Waypoint 8: (0, 3)
+###### Video Timestamps 5:21-6:38
+![(0, 3)](lab_12_figs/7th_point.png)
+![(0, 3)](lab_12_figs/7th_point_num.png)
+
+At this point in the run, it appears the robot's battery is running low, as it has trouble staying in place while localizing and turning, and undershoots waypoint 8 by some distance. The bayes filter localizes it to exactly waypint 8's position, however, in reality the robot was a bit to the right of it. This caused the drive to the final point to end up slightly to the right of waypoint 9 as well. 
+
+### Waypoint 9: (0,0)
+###### Video Timestamps 6:38-6:58
+
+There was no need to do any localization and planning for this waypoint, as this was the stop point for the whole path.
+
+## Discussion
