@@ -217,4 +217,10 @@ At this point in the run, it appears the robot's battery is running low, as it h
 
 There was no need to do any localization and planning for this waypoint, as this was the stop point for the whole path.
 
+
+## Problems and Potential Solutions
+
+The most persistent issue in our successful runs was the localization not being completely accurate. Although it was generally accurate enough to approximate the real location of the robot, it was often times offset by around a foot. We could potentially solve this by increasing the amount of distance sensor measurements used, and increasing the number of grid spaces used in tha bayes filter. This would trade computation time for accuray, but given that the bayes filter calculations are being done on a computer rather than the much less powerfull artemis board, this likely would not drastically increase the time for the robot to navigate.
 ## Discussion
+
+Overall we were very satisfied with the performace of our robot during this lab. We were successfully able to navigate the robot using completely closed-loop control. Combining the localization code with PID control was a nice way to combine everything that we had been taught over the course of the labs in this course.
